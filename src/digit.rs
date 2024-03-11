@@ -15,6 +15,7 @@ pub enum Digit {
     Nine
 }
 
+
 #[derive(Debug,Default,PartialEq,Eq)]
 pub struct CarrySum {
     pub carry: bool,
@@ -49,6 +50,39 @@ impl std::ops::Add<Digit> for Digit {
     }
 }
 
+#[derive(Debug,Default,PartialEq,Eq)]
+pub struct CarryProduct {
+    pub carry: Digit, // Less than 9
+    pub product: Digit
+}
+
+impl CarryProduct {
+    fn new(carry: Digit, product: Digit) -> Self {
+        Self { carry, product }
+    }
+
+    pub fn mul_two(&self, a: Digit, b: Digit) -> Self {
+        let mut product = a.as_u8() * b.as_u8();
+        product += self.carry.as_u8();
+        // Product can be no more than 89 at this point
+        if product <= 9 {
+            Self::new(Digit::Zero, product.try_into().unwrap())
+        } else {
+            let remainder: u8 = product % 10;
+            let carry: u8 = (product - remainder) / 10;
+            Self::new(carry.try_into().unwrap(), remainder.try_into().unwrap())
+        }
+    }
+}
+
+impl std::ops::Mul for Digit {
+    type Output = CarryProduct;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let cp: CarryProduct = Default::default();
+        cp.mul_two(self, rhs)
+    }
+}
 
 impl std::convert::TryFrom<char> for Digit {
     type Error = &'static str;
@@ -142,5 +176,25 @@ mod tests {
     #[test]
     fn can_carry() {
         assert_eq!(Digit::Nine + Digit::Three, CarrySum::new(true, Digit::Two));
+    }
+
+    #[test]
+    fn can_mul() {
+        assert_eq!(Digit::Two * Digit::Three, CarryProduct::new(Digit::Zero, Digit::Six));
+    }
+
+    #[test]
+    fn can_mul0() {
+        assert_eq!(Digit::Two * Digit::Zero, CarryProduct::new(Digit::Zero, Digit::Zero));
+    }
+
+    #[test]
+    fn can_mul1() {
+        assert_eq!(Digit::Two * Digit::One, CarryProduct::new(Digit::Zero, Digit::Two));
+    }
+
+    #[test]
+    fn can_mul_carry() {
+        assert_eq!(Digit::Six * Digit::Seven, CarryProduct::new(Digit::Four, Digit::Two));
     }
 }

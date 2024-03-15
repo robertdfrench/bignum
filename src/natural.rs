@@ -209,6 +209,19 @@ impl std::ops::Div for Natural {
     }
 }
 
+impl std::ops::Rem for Natural {
+    type Output = Self;
+
+    fn rem(self, other: Self) -> Self::Output {
+        let original = other.clone();
+        let mut product = other.clone();
+        while self > product {
+            product += other.clone();
+        }
+        original - (product - self)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -342,5 +355,19 @@ mod tests {
         let a: Natural = "16".parse().unwrap();
         let b: Natural = "5".parse().unwrap();
         assert_eq!(a / b, "3".parse().unwrap());
+    }
+
+    #[test]
+    fn rem() {
+        let a: Natural = "16".parse().unwrap();
+        let b: Natural = "5".parse().unwrap();
+        assert_eq!(a % b, "1".parse().unwrap());
+    }
+
+    #[test]
+    fn rem_large() {
+        let a: Natural = "27999".parse().unwrap();
+        let b: Natural = "1024".parse().unwrap();
+        assert_eq!(a % b, "351".parse().unwrap());
     }
 }

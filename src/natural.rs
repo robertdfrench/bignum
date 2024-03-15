@@ -66,6 +66,14 @@ impl Natural {
         "0".parse().unwrap()
     }
 
+    pub fn one() -> Self {
+        "1".parse().unwrap()
+    }
+
+    pub fn increment(&mut self) {
+        *self += Self::one();
+    }
+
     pub fn degree(&self) -> usize {
         self.digits.len() - 1
     }
@@ -146,7 +154,7 @@ impl std::ops::Sub for Natural {
 
         // Remove leading zeros
         loop {
-            if digits[digits.len() - 1] == digit::Digit::Zero {
+            if digits.len() > 1 && digits[digits.len() - 1] == digit::Digit::Zero {
                 digits.pop();
             } else {
                 break;
@@ -184,6 +192,20 @@ impl std::ops::Mul for Natural {
             total = total + summand;
         }
         total
+    }
+}
+
+impl std::ops::Div for Natural {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self::Output {
+        let mut n = Natural::one();
+        let mut product = other.clone();
+        while self >= product {
+            n.increment();
+            product += other.clone();
+        }
+        n - Natural::one()
     }
 }
 
@@ -292,5 +314,33 @@ mod tests {
         let a: Natural = "1099511627776".parse().unwrap();
         let b: Natural = "1099511626000".parse().unwrap();
         assert_eq!(a - b, "1776".parse().unwrap());
+    }
+
+    #[test]
+    fn increment() {
+        let mut a = Natural::zero();
+        a.increment();
+        assert_eq!(a, Natural::one());
+    }
+
+    #[test]
+    fn div() {
+        let a: Natural = "1099511627776".parse().unwrap();
+        let b: Natural = "2199023255552".parse().unwrap();
+        assert_eq!(b / a, "2".parse().unwrap());
+    }
+
+    #[test]
+    fn div2() {
+        let a: Natural = "1099511627776".parse().unwrap();
+        let b: Natural = "2199023255552".parse().unwrap();
+        assert_eq!(a / b, "0".parse().unwrap());
+    }
+
+    #[test]
+    fn div3() {
+        let a: Natural = "16".parse().unwrap();
+        let b: Natural = "5".parse().unwrap();
+        assert_eq!(a / b, "3".parse().unwrap());
     }
 }

@@ -51,6 +51,34 @@ impl std::ops::Add<Digit> for Digit {
 }
 
 #[derive(Debug,Default,PartialEq,Eq)]
+pub struct BorrowDifference {
+    pub borrow: bool,
+    pub difference: Digit
+}
+
+impl std::ops::Sub for Digit {
+    type Output = BorrowDifference;
+
+    fn sub(self, other: Self) -> Self::Output {
+        let self_ = self.as_u8();
+        let other = other.as_u8();
+        let self_: i8 = self_.try_into().unwrap();
+        let other: i8 = other.try_into().unwrap();
+        let mut borrow = false;
+        let mut difference = self_ - other;
+        if difference < 0 {
+            difference += 10;
+            borrow = true;
+        }
+
+        let difference: u8 = difference.try_into().unwrap();
+        let difference: Digit = difference.try_into().unwrap();
+
+        Self::Output{ difference, borrow }
+    }
+}
+
+#[derive(Debug,Default,PartialEq,Eq)]
 pub struct CarryProduct {
     pub carry: Digit, // Less than 9
     pub product: Digit
@@ -196,5 +224,12 @@ mod tests {
     #[test]
     fn can_mul_carry() {
         assert_eq!(Digit::Six * Digit::Seven, CarryProduct::new(Digit::Four, Digit::Two));
+    }
+
+    #[test]
+    fn can_sub() {
+        let borrow = false;
+        let difference = Digit::Two;
+        assert_eq!(Digit::Three - Digit::One, BorrowDifference{ borrow, difference });
     }
 }
